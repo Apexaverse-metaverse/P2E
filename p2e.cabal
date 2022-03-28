@@ -37,4 +37,5 @@ library
       plutus-tx-plugin,
       plutus-tx,
       plutus-ledger,
+      text,
     hs-source-dirs: src
