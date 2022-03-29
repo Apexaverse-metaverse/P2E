@@ -20,7 +20,10 @@ t1 = Trace.walletInstanceTag w1
 
 tests :: TestTree
 tests = testGroup "p2e"
-    [ checkPredicate "Mint 10_000_000_000 $AXV"
+    [ checkPredicate "Expose 'mint' endpoint"
+        ( endpointAvailable @"mint" endpoints t1 )
+        $ void $ Trace.activateContractWallet w1 endpoints
+    , checkPredicate "Mint 10_000_000_000 $AXV"
         ( walletFundsChange w1 (
             Value.singleton curSymbol "APEXAVERSE" 10_000_000_000
           )
