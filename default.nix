@@ -1,6 +1,6 @@
 { source-repo-override ? { } }:
 ########################################################################
-# default.nix -- The top-level nix build file for plutus-starter.
+# default.nix -- The top-level nix build file for miles.
 #
 # This file defines various attributes that are used for building and
 # developing p2e.
