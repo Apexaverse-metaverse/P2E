@@ -2,9 +2,11 @@
 
 ## Tokenomics
 
-- TokenName: PEXAVERSE
-- TokenSymbol: $AXV
-- TotalSupply: 10000,000,000
+```
+TokenName: APEXAVERSE
+TokenSymbol: $AXV
+TotalSupply: 10000,000,000
 
-- Basic functions:
+Basic functions:
 Mint, Burn
+```
