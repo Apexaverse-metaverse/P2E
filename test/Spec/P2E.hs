@@ -11,7 +11,7 @@ import Control.Monad (void)
 import Data.Text (Text)
 import Data.Void (Void)
 import qualified Plutus.Trace.Emulator as Trace
-import Plutus.Contract (Contract, EmptySchema, awaitTxConfirmed, submitTxConstraintsWith)
+import Plutus.Contract as Contract
 import Plutus.Contract.Test
 import Plutus.Contract.Trace()
 import Ledger (PaymentPubKeyHash, Script, unMintingPolicyScript, scriptSize, getCardanoTxId)
@@ -39,14 +39,16 @@ traceMint = void $ do
     _ <- Trace.nextSlot
     void Trace.nextSlot
 
-errorMintingWrongWallet = assertContractError contract (const True) "mint contract done with unnallowed wallet" where
-    contract :: Contract () EmptySchema Text ()
-    contract = do
-        let val     = singleton (curSymbol pkh2) tokenName tokenSupply
-            lookups = Constraints.mintingPolicy $ policy pkh2 
-            tx      = Constraints.mustMintValue val
-        ledgerTx <- submitTxConstraintsWith @Void lookups tx
-        void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
+
+-- simulates a mint with a policy written for another addr
+mintInvalidPK :: PaymentPubKeyHash -> Contract () EmptySchema Text ()
+mintInvalidPK givenPk = do
+    myPk <- Contract.ownPaymentPubKeyHash
+    let val     = singleton (curSymbol myPk) tokenName tokenSupply
+        lookups = Constraints.mintingPolicy $ policy givenPk         
+        tx      = Constraints.mustMintValue val
+    ledgerTx <- submitTxConstraintsWith @Void lookups tx
+    void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
 
 tests :: TestTree
 tests = testGroup "P2E"
@@ -56,8 +58,9 @@ tests = testGroup "P2E"
     , checkPredicate "Mint 10_000_000_000 $AXV"
         (walletFundsChange w1 $ singleton ( curSymbol pkh1 ) "APEXVERSE" 10_000_000_000)
         traceMint
-    , checkPredicate "Error when unallowed wallet tries to mint $AXV"
-        errorMintingWrongWallet
+    , checkPredicate "Not mint when unallowed wallet tries to mint $AXV"
+        -- errorMintingWrongWallet
+        (assertNotDone (mintInvalidPK pkh2) t1 "contract done")
         traceMint
     -- It still not possible to call goldenPir with WrappedMintingPolicyType
     -- , goldenPir "test/Spec/policy.pir" ( policyCode pkh1 )
