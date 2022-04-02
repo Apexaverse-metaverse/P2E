@@ -59,7 +59,6 @@ tests = testGroup "P2E"
         (walletFundsChange w1 $ singleton ( curSymbol pkh1 ) "APEXVERSE" 10_000_000_000)
         traceMint
     , checkPredicate "Not mint when unallowed wallet tries to mint $AXV"
-        -- errorMintingWrongWallet
         (assertNotDone (mintInvalidPK pkh2) t1 "contract done")
         traceMint
     -- It still not possible to call goldenPir with WrappedMintingPolicyType
