@@ -57,5 +57,7 @@ test-suite test-p2e
       tasty-hedgehog >=0.2.0.0,
       plutus-contract -any,
       plutus-ledger -any,
+      plutus-ledger-constraints -any,
+      plutus-tx -any,
       text -any,
       p2e -any,

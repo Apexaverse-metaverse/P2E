@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE NumericUnderscores  #-}
 
-module P2E (mint, policy, policyCode, curSymbol, simulate, writePolicyFile, unsafeTokenNameHex) where
+module P2E (mint, policy, policyCode, curSymbol, tokenSupply, simulate, writePolicyFile, unsafeTokenNameHex, tokenName) where
 
 import           Control.Monad          hiding (fmap)
 import           Control.Exception      (throwIO)
@@ -52,22 +52,25 @@ tokenSupply :: Integer
 tokenSupply = 10_000_000_000
 
 {-# INLINABLE mkPolicy #-}
-mkPolicy :: () -> ScriptContext -> Bool
-mkPolicy () _ = True
+mkPolicy :: PaymentPubKeyHash -> () -> ScriptContext -> Bool
+mkPolicy pkh () ctx = txSignedBy (scriptContextTxInfo ctx) $ unPaymentPubKeyHash pkh
 
-policyCode :: PlutusTx.CompiledCode Scripts.WrappedMintingPolicyType
-policyCode = $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy mkPolicy ||])
+policyCode :: PaymentPubKeyHash -> PlutusTx.CompiledCode Scripts.WrappedMintingPolicyType
+policyCode pkh = $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy . mkPolicy ||])
+    `PlutusTx.applyCode`
+    PlutusTx.liftCode pkh
 
-policy :: Scripts.MintingPolicy
-policy = mkMintingPolicyScript policyCode
+policy :: PaymentPubKeyHash -> Scripts.MintingPolicy
+policy = mkMintingPolicyScript . policyCode
 
-curSymbol :: CurrencySymbol
-curSymbol = scriptCurrencySymbol policy
+curSymbol :: PaymentPubKeyHash -> CurrencySymbol
+curSymbol = scriptCurrencySymbol . policy
 
 mint :: Contract () EmptySchema Text ()
 mint = do
-    let val     = Value.singleton curSymbol tokenName tokenSupply
-        lookups = mintingPolicy policy
+    pkh <- Contract.ownPaymentPubKeyHash
+    let val     = Value.singleton (curSymbol pkh) tokenName tokenSupply
+        lookups = mintingPolicy $ policy pkh
         tx      = mustMintValue val
     ledgerTx <- submitTxConstraintsWith @Void lookups tx
     void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
@@ -76,10 +79,10 @@ mint = do
 writeMintingPolicy :: FilePath -> Scripts.MintingPolicy -> IO (Either (FileError ()) ())
 writeMintingPolicy file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) file Nothing . PlutusScriptSerialised . SBS.toShort . LBS.toStrict . serialise . getMintingPolicy
 
-writePolicyFile :: IO ()
-writePolicyFile = do
+writePolicyFile :: PaymentPubKeyHash -> IO ()
+writePolicyFile pkh = do
     let file  = "policy.plutus"
-    e <- writeMintingPolicy file policy
+    e <- writeMintingPolicy file $ policy pkh
     case e of
       Left err -> throwIO $ userError $ show err
       Right () -> return ()
