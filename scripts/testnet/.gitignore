@@ -1,3 +1,5 @@
 /protocol-parameters.json
 /tx.unsigned
 /tx.signed
+/db
+/node.socket
