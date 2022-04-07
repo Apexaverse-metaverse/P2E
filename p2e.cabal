@@ -26,6 +26,7 @@ library
     import: lang
     exposed-modules:
       P2E
+      Deploy
     build-depends:
       base >= 4.9 && < 5,
       aeson -any,
@@ -40,7 +41,10 @@ library
       plutus-tx -any,
       plutus-ledger -any,
       plutus-ledger-constraints -any,
+      plutus-ledger-api -any,
       cardano-api -any,
+      cardano-ledger-core -any,
+      cardano-crypto-class -any,
     hs-source-dirs: src
 
 test-suite test-p2e
