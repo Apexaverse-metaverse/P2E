@@ -3,7 +3,7 @@
 # default.nix -- The top-level nix build file for plutus-starter.
 #
 # This file defines various attributes that are used for building and
-# developing plutus-starter.
+# developing p2e.
 #
 ########################################################################
 
@@ -11,7 +11,7 @@ let
   # Here a some of the various attributes for the variable 'packages':
   #
   # { pkgs
-  #   plutus-starter: {
+  #   p2e: {
   #     haskell: {
   #       project # The Haskell project created by haskell-nix.project
   #       packages # All the packages defined by our project, including dependencies
@@ -25,11 +25,11 @@ let
   # }
   packages = import ./nix { inherit source-repo-override; };
 
-  inherit (packages) pkgs plutus-starter;
-  project = plutus-starter.haskell.project;
+  inherit (packages) pkgs p2e;
+  project = p2e.haskell.project;
 in
 {
-  inherit pkgs plutus-starter;
+  inherit pkgs p2e;
 
   inherit project;
 }
