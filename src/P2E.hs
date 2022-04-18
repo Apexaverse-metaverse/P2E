@@ -46,10 +46,11 @@ curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
 -- Second arg is a placeholder for endpoint params
-type FreeSchema = Endpoint "mint" ()
+type P2ESchema = Endpoint "mint" ()
 
--- First arg is a placeholder for endpoint params
-mint :: () -> Contract w FreeSchema Text ()
+type P2EParams = ()
+
+mint :: P2EParams -> Contract w MilesSchema Text ()
 mint _ = do
     let val     = Value.singleton curSymbol tokenName tokenSupply
         lookups = Constraints.mintingPolicy policy
@@ -58,7 +59,7 @@ mint _ = do
     void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
     Contract.logInfo @String $ printf "forged %s" (show val)
 
-endpoints :: Contract () FreeSchema Text ()
+endpoints :: Contract () P2ESchema Text ()
 endpoints = mint' >> endpoints
   where
     mint' = awaitPromise $ endpoint @"mint" mint
@@ -66,5 +67,5 @@ endpoints = mint' >> endpoints
 main :: IO ()
 main = runEmulatorTraceIO $ do
     h1 <- activateContractWallet (knownWallet 1) endpoints
-    callEndpoint @"mint" h1 () -- () is params
+    callEndpoint @"mint" h1 (() :: P2EParams)
     void $ Emulator.waitNSlots 1
