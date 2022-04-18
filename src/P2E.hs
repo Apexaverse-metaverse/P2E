@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE NumericUnderscores  #-}
 
-module P2E (mint, policyCode, curSymbol, main) where
+module P2E (mint, policy, policyCode, curSymbol, main) where
 
 import           Control.Monad          hiding (fmap)
 import           Data.Text              (Text)
