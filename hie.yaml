@@ -1,4 +1,6 @@
 cradle:
   cabal:
     - path: "./src"
-      component: "lib:apex-verse"
+      component: "p2e:lib:p2e"
+    - path: "./test"
+      component: "p2e:test:p2e-test"
