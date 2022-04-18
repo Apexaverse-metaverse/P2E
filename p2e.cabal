@@ -1,0 +1,67 @@
+cabal-version:      3.0
+name:               p2e
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+synopsis: P2E Native Tokens
+
+flag defer-plugin-errors
+    description:
+        Defer errors from the plugin, useful for things like Haddock that can't handle it.
+    default: False
+    manual: True
+
+common lang
+    default-language:   Haskell2010
+    ghc-options:
+      -Wall -Wnoncanonical-monad-instances
+      -Wincomplete-uni-patterns -Wincomplete-record-updates
+      -Wredundant-constraints -Widentities -rtsopts
+      -- See Plutus Tx readme
+      -fobject-code -fno-ignore-interface-pragmas -fno-omit-interface-pragmas
+    if flag(defer-plugin-errors)
+        ghc-options: -fplugin-opt PlutusTx.Plugin:defer-errors
+
+library
+    import: lang
+    exposed-modules:
+      P2E
+      Deploy
+    build-depends:
+      base >= 4.9 && < 5,
+      aeson -any,
+      bytestring -any,
+      containers -any,
+      freer-extras -any,
+      text -any,
+      serialise -any,
+      playground-common -any,
+      plutus-contract -any,
+      plutus-tx-plugin -any,
+      plutus-tx -any,
+      plutus-ledger -any,
+      plutus-ledger-constraints -any,
+      plutus-ledger-api -any,
+      cardano-api -any,
+      cardano-ledger-core -any,
+      cardano-crypto-class -any,
+    hs-source-dirs: src
+
+test-suite test-p2e
+    import: lang
+    type: exitcode-stdio-1.0
+    main-is: Spec.hs
+    hs-source-dirs: test
+    other-modules:
+      Spec.P2E
+    build-depends:
+      base >= 4.9 && < 5,
+      tasty -any,
+      tasty-hunit -any,
+      tasty-hedgehog >=0.2.0.0,
+      plutus-contract -any,
+      plutus-ledger -any,
+      plutus-ledger-constraints -any,
+      plutus-tx -any,
+      text -any,
+      p2e -any,
