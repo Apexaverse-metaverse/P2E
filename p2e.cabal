@@ -39,6 +39,7 @@ library
       plutus-tx-plugin -any,
       plutus-tx -any,
       plutus-ledger -any,
+      plutus-ledger-constraints -any,
       cardano-api -any,
     hs-source-dirs: src
 

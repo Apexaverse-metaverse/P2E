@@ -27,7 +27,7 @@ import qualified PlutusTx
 import           PlutusTx.Prelude       hiding (Semigroup(..), unless)
 import           PlutusTx.Builtins.Internal  (BuiltinByteString (..))
 import           Ledger                 hiding (mint, singleton)
-import           Ledger.Constraints     as Constraints
+import           Ledger.Constraints     (mintingPolicy, mustMintValue)
 import qualified Ledger.Typed.Scripts   as Scripts
 import qualified Ledger.Value           as Value
 import           Prelude                (IO, Show (..), String,  userError, FilePath)
@@ -67,8 +67,8 @@ curSymbol = scriptCurrencySymbol policy
 mint :: Contract () EmptySchema Text ()
 mint = do
     let val     = Value.singleton curSymbol tokenName tokenSupply
-        lookups = Constraints.mintingPolicy policy
-        tx      = Constraints.mustMintValue val
+        lookups = mintingPolicy policy
+        tx      = mustMintValue val
     ledgerTx <- submitTxConstraintsWith @Void lookups tx
     void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
     Contract.logInfo @String $ printf "forged %s" (show val)
