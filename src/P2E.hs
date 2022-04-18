@@ -11,8 +11,7 @@
 {-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE NumericUnderscores  #-}
 
-
-module P2E where
+module P2E (mint, policyCode, curSymbol, main) where
 
 import           Control.Monad          hiding (fmap)
 import           Data.Text              (Text)
@@ -48,13 +47,8 @@ policy = mkMintingPolicyScript policyCode
 curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
--- Second arg is a placeholder for endpoint params
-type P2ESchema = Endpoint "mint" ()
-
-type P2EParams = ()
-
-mint :: P2EParams -> Contract w MilesSchema Text ()
-mint _ = do
+mint :: Contract () EmptySchema Text ()
+mint = do
     let val     = Value.singleton curSymbol tokenName tokenSupply
         lookups = Constraints.mintingPolicy policy
         tx      = Constraints.mustMintValue val
@@ -62,13 +56,7 @@ mint _ = do
     void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
     Contract.logInfo @String $ printf "forged %s" (show val)
 
-endpoints :: Contract () P2ESchema Text ()
-endpoints = mint' >> endpoints
-  where
-    mint' = awaitPromise $ endpoint @"mint" mint
-
 main :: IO ()
 main = runEmulatorTraceIO $ do
-    h1 <- activateContractWallet (knownWallet 1) endpoints
-    callEndpoint @"mint" h1 (() :: P2EParams)
+    _ <- activateContractWallet (knownWallet 1) mint
     void $ Emulator.waitNSlots 1
