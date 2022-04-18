@@ -15,10 +15,8 @@
 module P2E where
 
 import           Control.Monad          hiding (fmap)
-import           Data.Aeson             (ToJSON, FromJSON)
 import           Data.Text              (Text)
 import           Data.Void              (Void)
-import           GHC.Generics           (Generic)
 import           Plutus.Contract        as Contract
 import           Plutus.Trace.Emulator  as Emulator
 import qualified PlutusTx
@@ -26,10 +24,7 @@ import           PlutusTx.Prelude       hiding (Semigroup(..), unless)
 import           Ledger                 hiding (mint, singleton)
 import           Ledger.Constraints     as Constraints
 import qualified Ledger.Typed.Scripts   as Scripts
-import           Ledger.Value           as Value
-import           Playground.Contract    (printJson, printSchemas, ensureKnownCurrencies, stage, ToSchema)
-import           Playground.TH          (mkKnownCurrencies, mkSchemaDefinitions)
-import           Playground.Types       (KnownCurrency (..))
+import qualified Ledger.Value           as Value
 import           Prelude                (IO, Show (..), String)
 import           Text.Printf            (printf)
 import           Wallet.Emulator.Wallet
@@ -50,10 +45,12 @@ policy = mkMintingPolicyScript $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy
 curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
-type FreeSchema = Endpoint "mint" MintParams
+-- Second arg is a placeholder for endpoint params
+type FreeSchema = Endpoint "mint" ()
 
-mint :: Contract w FreeSchema Text ()
-mint = do
+-- First arg is a placeholder for endpoint params
+mint :: () -> Contract w FreeSchema Text ()
+mint _ = do
     let val     = Value.singleton curSymbol tokenName tokenSupply
         lookups = Constraints.mintingPolicy policy
         tx      = Constraints.mustMintValue val
@@ -66,12 +63,8 @@ endpoints = mint' >> endpoints
   where
     mint' = awaitPromise $ endpoint @"mint" mint
 
-mkSchemaDefinitions ''FreeSchema
-
-mkKnownCurrencies []
-
 main :: IO ()
 main = runEmulatorTraceIO $ do
     h1 <- activateContractWallet (knownWallet 1) endpoints
-    callEndpoint @"mint" h1
+    callEndpoint @"mint" h1 () -- () is params
     void $ Emulator.waitNSlots 1
