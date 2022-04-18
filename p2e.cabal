@@ -1,4 +1,4 @@
-cabal-version:      2.4
+cabal-version:      3.0
 name:               p2e
 version:            0.1.0.0
 
@@ -28,18 +28,18 @@ library
       P2E
     build-depends:
       base >= 4.9 && < 5,
-      aeson,
-      bytestring,
-      containers,
-      freer-extras,
-      text,
-      serialise,
-      playground-common,
-      plutus-contract,
-      plutus-tx-plugin,
-      plutus-tx,
-      plutus-ledger,
-      cardano-api,
+      aeson -any,
+      bytestring -any,
+      containers -any,
+      freer-extras -any,
+      text -any,
+      serialise -any,
+      playground-common -any,
+      plutus-contract -any,
+      plutus-tx-plugin -any,
+      plutus-tx -any,
+      plutus-ledger -any,
+      cardano-api -any,
     hs-source-dirs: src
 
 test-suite test-p2e
@@ -53,8 +53,8 @@ test-suite test-p2e
       base >= 4.9 && < 5,
       tasty -any,
       tasty-hunit -any,
-      tasty-hedgehog -any,
-      plutus-contract,
-      plutus-ledger,
-      text,
-      p2e,
+      tasty-hedgehog >=0.2.0.0,
+      plutus-contract -any,
+      plutus-ledger -any,
+      text -any,
+      p2e -any,
