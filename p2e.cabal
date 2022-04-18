@@ -32,12 +32,14 @@ library
       bytestring,
       containers,
       freer-extras,
+      text,
+      serialise,
       playground-common,
       plutus-contract,
       plutus-tx-plugin,
       plutus-tx,
       plutus-ledger,
-      text,
+      cardano-api,
     hs-source-dirs: src
 
 test-suite test-p2e
