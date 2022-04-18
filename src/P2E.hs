@@ -39,8 +39,11 @@ tokenSupply = 10_000_000_000
 mkPolicy :: () -> ScriptContext -> Bool
 mkPolicy () _ = True
 
+policyCode :: PlutusTx.CompiledCode Scripts.WrappedMintingPolicyType
+policyCode = $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy mkPolicy ||])
+
 policy :: Scripts.MintingPolicy
-policy = mkMintingPolicyScript $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy mkPolicy ||])
+policy = mkMintingPolicyScript policyCode
 
 curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy

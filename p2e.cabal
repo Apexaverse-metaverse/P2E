@@ -3,7 +3,7 @@ name:               p2e
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis: P2E Metaplanes Native Tokens
+synopsis: P2E Native Tokens
 
 flag defer-plugin-errors
     description:

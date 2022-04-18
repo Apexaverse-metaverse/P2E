@@ -31,4 +31,5 @@ tests = testGroup "p2e"
         $ do
           h1 <- Trace.activateContractWallet w1 endpoints
           Trace.callEndpoint @"mint" h1 ()
+    , goldenPir "test/Spec/policy.pir" policyCode
     ]
