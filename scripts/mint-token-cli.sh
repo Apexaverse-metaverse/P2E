@@ -3,7 +3,7 @@ set -e
 addrFile=$(realpath $2)
 skeyFile=$(realpath $3)
 ppFile="$SCRIPT_DIR/$NODE_DIR/protocol-parameters.json"
-policyFile="$SCRIPT_DIR/../policy.plutus"
+policyFile="$SCRIPT_DIR/$NODE_DIR/policy.plutus"
 oref=$1
 
 echo "address file: $addrFile"
