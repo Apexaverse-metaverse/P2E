@@ -38,7 +38,7 @@ library
       playground-common -any,
       plutus-contract -any,
       plutus-tx-plugin -any,
-      plutus-tx -any,
+      plutus-tx >= 0.1.0.0,
       plutus-ledger -any,
       plutus-ledger-constraints -any,
       plutus-ledger-api -any,
