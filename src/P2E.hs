@@ -14,6 +14,7 @@
 
 module P2E 
     ( mint
+    , burn
     , policy
     , policyCode
     , curSymbol
@@ -61,8 +62,9 @@ mkPolicy pp () ctx = traceIfFalse "Invalid PubKey" isPKValid &&
                         info           = scriptContextTxInfo ctx
                         isPKValid      = txSignedBy info $ unPaymentPubKeyHash (pk pp)
                         isAmountValid  = case Value.flattenValue (txInfoMint info) of
-                           [(_, tn', amt)] -> tn' == (tn pp) && amt == (ts pp)
-                           _               -> False
+                           [(_, tn', v)] | tn' == (tn pp) && v > 0 -> v == (ts pp) -- mint supply
+                           [(_, tn', v)] | tn' == (tn pp) && v < 0 -> True         -- burn
+                           _                                       -> False        -- other
 
 mkPolicyParams :: PaymentPubKeyHash -> PolicyParams
 mkPolicyParams p = PolicyParams { tn = tokenName, ts = tokenSupply, pk = p }
@@ -89,6 +91,16 @@ mint = do
     void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
     Contract.logInfo @String $ printf "forged %s" (show val)
 
+burn :: Integer -> Contract () EmptySchema  Text ()
+burn amount = do
+    pkh <- Contract.ownPaymentPubKeyHash
+    let pp      = mkPolicyParams pkh
+        val     = Value.singleton (curSymbol pp) tokenName $ negate $ abs amount
+        lookups = mintingPolicy $ policy pp
+        tx      = mustMintValue val
+    ledgerTx <- submitTxConstraintsWith @Void lookups tx
+    void $ awaitTxConfirmed $ getCardanoTxId ledgerTx
+    Contract.logInfo @String $ printf "burned %s" (show val)
 
 simulate :: IO ()
 simulate = runEmulatorTraceIO $ do
