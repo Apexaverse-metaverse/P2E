@@ -1,16 +1,16 @@
 # P2E
 
-## Requeriments
+## Requisites
 
 [Nix](https://nixos.org)
 
 ## Minting the token
 
-First create wallet files: 01.skey, 01.vkey, 01.vkeyhash and 01.addr in scripts/testnet (or mainnet), or use the given wallet.
+First create wallet files (skey and addr) or use the given wallet in scripts/testnet folder.
 
-:warn: Remember to have enough ADA funds in the wallet address. You can use [faucet to add fake funds in testnet](https://testnets.cardano.org/en/testnets/cardano/tools/faucet/).
+> Remember to have enough ADA funds in the wallet address. You can use [faucet to add fake funds in testnet](https://testnets.cardano.org/en/testnets/cardano/tools/faucet/).
 
-[Tutorial](https://youtu.be/ABtffZPoUqU?list=PLNEK_Ejlx3x2zxcfoVGARFExzOHwXFCCL&t=248)
+[Tutorial how to create wallets](https://youtu.be/ABtffZPoUqU?list=PLNEK_Ejlx3x2zxcfoVGARFExzOHwXFCCL&t=248)
 
 Then
 
@@ -24,12 +24,12 @@ source scripts/env.sh testnet
 # Run cardano-node
 cardano-node.sh
 
-query-key1.sh
+query-key.sh scripts/testnet/wallet.addr
 # Get the data from last command and replace the string below
-mint-token-cli.sh "TxHash#TxIx"
+mint-token-cli.sh "TxHash#TxIx" scripts/testnet/wallet.addr scripts/testnet/wallet.skey
 
 # Query again to see the token transaction
-query-key1.sh
+query-key.sh wallet.addr
 ```
 
 ## Tokenomics
