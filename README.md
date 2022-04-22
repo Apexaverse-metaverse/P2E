@@ -2,7 +2,8 @@
 
 ## Requisites
 
-[Nix](https://nixos.org)
+- [Nix](https://nixos.org)
+- [IOHK Cache](https://github.com/input-output-hk/plutus/blob/master/README.adoc#nix-advice)
 
 ## Minting the token
 
