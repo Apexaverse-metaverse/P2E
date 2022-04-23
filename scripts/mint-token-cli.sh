@@ -16,7 +16,7 @@ addr=$(cat $addrFile)
 cd $SCRIPT_DIR/..
 cabal repl -v0 <<EOF
     import Deploy (writePolicyFile)
-    writePolicyFile "$addr" 
+    writePolicyFile "$policyFile" "$addr" 
 EOF
 echo "policy file: $policyFile"
 tnHex=$(
