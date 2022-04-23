@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
-addrFile="$SCRIPT_DIR/$NODE_DIR/01.addr"
-skeyFile="$SCRIPT_DIR/$NODE_DIR/01.skey"
+addrFile=$(realpath $2)
+skeyFile=$(realpath $3)
 ppFile="$SCRIPT_DIR/$NODE_DIR/protocol-parameters.json"
-policyFile="$SCRIPT_DIR/../policy.plutus"
+policyFile="$SCRIPT_DIR/$NODE_DIR/policy.plutus"
 oref=$1
 
 echo "address file: $addrFile"
@@ -16,7 +16,7 @@ addr=$(cat $addrFile)
 cd $SCRIPT_DIR/..
 cabal repl -v0 <<EOF
     import Deploy (writePolicyFile)
-    writePolicyFile "$addr" 
+    writePolicyFile "$policyFile" "$addr" 
 EOF
 echo "policy file: $policyFile"
 tnHex=$(
@@ -36,7 +36,7 @@ v="10000000000 $pid.$tnHex"
 
 echo "currency symbol: $pid"
 echo "token name (hex): $tnHex"
-echo "minted value: $v"
+echo "minting value: $v"
 echo "address: $addr"
 
 cardano-cli transaction build \
@@ -57,7 +57,3 @@ cardano-cli transaction sign \
     --signing-key-file $skeyFile \
     $MAGIC \
     --out-file $signedFile
- 
-cardano-cli transaction submit \
-     $MAGIC \
-     --tx-file $signedFile

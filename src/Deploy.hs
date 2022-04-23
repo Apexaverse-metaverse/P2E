@@ -53,13 +53,12 @@ unsafeTokenNameHex = let getByteString (BuiltinByteString bs) = bs in BS8.unpack
 writeMintingPolicy :: FilePath -> Plutus.Scripts.MintingPolicy -> IO (Either (FileError ()) ())
 writeMintingPolicy file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) file Nothing . PlutusScriptSerialised . SBS.toShort . LBS.toStrict . serialise . getMintingPolicy
 
-writePolicyFile :: [Char] -> IO ()
-writePolicyFile s = case tryReadAddress s >>= Plutus.toPubKeyHash of
+writePolicyFile :: [Char] -> [Char] -> IO ()
+writePolicyFile f s = case tryReadAddress s >>= Plutus.toPubKeyHash of
     Nothing  -> throwIO $ userError "Could not compute hash of address"
     Just pkh -> do
-        let file    = "policy.plutus"
-            pp      = mkPolicyParams $ Plutus.PaymentPubKeyHash pkh
-        e <- writeMintingPolicy file $ policy $ pp
+        let pp      = mkPolicyParams $ Plutus.PaymentPubKeyHash pkh
+        e <- writeMintingPolicy f $ policy $ pp
         case e of
           Left err -> throwIO $ userError $ show err
           Right () -> return ()
