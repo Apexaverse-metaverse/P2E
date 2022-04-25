@@ -36,9 +36,12 @@ query-key.sh wallet.addr
 ## Tokenomics
 
 ```
-TokenName: APEXAVERSE
-TokenSymbol: $AXV
-TotalSupply: 10,000,000,000
+Ticker and asset name: AXV
+Name: Apexaverse
+Description: The intersection of the Metaverse, P2E, Web 3.0 and NFTs on Cardano Blockchain.
+Decimals: 6
+URL: https://apexaverse.com
+Total Supply and Max Supply: 10,000,000,000.000000
 
 Basic functions:
 Mint, Burn
