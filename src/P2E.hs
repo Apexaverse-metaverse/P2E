@@ -45,7 +45,7 @@ tokenName :: TokenName
 tokenName = "AXV"
 
 tokenSupply :: TokenSupply
-tokenSupply = 10_000_000_000
+tokenSupply = 10_000_000_000_000_000
 
 data PolicyParams = PolicyParams
     { tn :: TokenName

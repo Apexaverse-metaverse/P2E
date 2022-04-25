@@ -32,7 +32,7 @@ unsignedFile="$SCRIPT_DIR/$NODE_DIR/tx.unsigned"
 signedFile="$SCRIPT_DIR/$NODE_DIR/tx.signed"
 unitFile="$SCRIPT_DIR/$NODE_DIR/unit.json"
 pid=$(cardano-cli transaction policyid --script-file $policyFile)
-v="10000000000 $pid.$tnHex"
+v="10000000000000000 $pid.$tnHex"
 
 echo "currency symbol: $pid"
 echo "token name (hex): $tnHex"

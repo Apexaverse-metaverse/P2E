@@ -68,20 +68,20 @@ tests = let t1 = Trace.walletInstanceTag w1
             [ checkPredicate "Mint contract done without errors"
                 (assertDone mint t1 (const True) "mint contract not done")
                 (trace mint)
-            , checkPredicate "Mint 10_000_000_000 AXV"
-                (walletFundsChange w1 $ singleton (curSymbol pp1) "AXV" 10_000_000_000)
+            , checkPredicate "Mint 10_000_000_000_000_000 AXV"
+                (walletFundsChange w1 $ singleton (curSymbol pp1) "AXV" 10_000_000_000_000_000)
                 (trace mint)
             , checkPredicate "Not mint when unallowed wallet tries to mint AXV"
                 (assertNotDone (mintInvalidPK pkh2) t1 "contract done")
                 (trace mint)
-            , checkPredicate "Not mint less than 10_000_000_000 AXV"
+            , checkPredicate "Not mint less than 10_000_000_000_000_000 AXV"
                 (assertFailedTransaction $ \_ _ _ -> True)
-                (trace $ mintVal 9_999_999_999)
-            , checkPredicate "Not mint more than 10_000_000_000 AXV"
+                (trace $ mintVal 9_999_999_999_999_999)
+            , checkPredicate "Not mint more than 10_000_000_000_000_000 AXV"
                 (assertFailedTransaction $ \_ _ _ -> True)
-                (trace $ mintVal 10_000_000_001)
+                (trace $ mintVal 10_000_000_000_000_000_001)
             , checkPredicate "Burn a given amount of AXV"
-                (walletFundsChange w1 $ singleton (curSymbol pp1) "AXV" 9_999_999_999)
+                (walletFundsChange w1 $ singleton (curSymbol pp1) "AXV" 9_999_999_999_999_999)
                 (trace $ burnVal 1)
             -- It still not possible to call goldenPir with WrappedMintingPolicyType
             -- , goldenPir "test/Spec/policy.pir" ( policyCode pp1 )
