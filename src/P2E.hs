@@ -42,7 +42,7 @@ import           Wallet.Emulator.Wallet
 type TokenSupply = Integer
 
 tokenName :: TokenName
-tokenName = "APEXAVERSE"
+tokenName = "AXV"
 
 tokenSupply :: TokenSupply
 tokenSupply = 10_000_000_000
@@ -58,7 +58,7 @@ PlutusTx.makeLift ''PolicyParams
 {-# INLINABLE mkPolicy #-}
 mkPolicy :: PolicyParams -> () -> ScriptContext -> Bool
 mkPolicy pp () ctx = traceIfFalse "Invalid PubKey" isPKValid &&
-                     traceIfFalse "Invalid $AXV amount" isAmountValid where
+                     traceIfFalse "Invalid AXV amount" isAmountValid where
                         info           = scriptContextTxInfo ctx
                         isPKValid      = txSignedBy info $ unPaymentPubKeyHash (pk pp)
                         isAmountValid  = case Value.flattenValue (txInfoMint info) of
