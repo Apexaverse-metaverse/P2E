@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE NumericUnderscores  #-}
 
-module Spec.P2E ( tests, mintTwice )  where
+module Spec.P2E ( tests )  where
 
 import Test.Tasty
 import Control.Monad (void)

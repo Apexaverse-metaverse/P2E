@@ -30,9 +30,8 @@ import           Control.Monad.Trans.Class (lift)
 import           Control.Monad.Trans.Maybe (MaybeT(..))
 import           Data.Text              (Text)
 import           Data.Void              (Void)
-import           Data.Map               (Map, keys)
+import           Data.Map               (keys)
 import           Plutus.Contract        as Contract
-import           Plutus.Contract.Request  as Contract
 import           Plutus.Trace.Emulator  as Emulator
 import qualified PlutusTx
 import           PlutusTx.Prelude       hiding (Semigroup(..), unless)
@@ -93,26 +92,15 @@ anyTokenAmount name amount val = any testEntry $ Value.flattenValue val where
     testEntry (_, tName, tAmount) | tName == name = tAmount >= amount
     testEntry _                                   = False
 
-head' :: Map TxOutRef ChainIndexTxOut -> MaybeT (Contract () EmptySchema Text) TxOutRef
-head' utxos = MaybeT $ do
+-- returns the first found utxo in the payment address
+headUtxo :: PaymentPubKeyHash -> MaybeT (Contract () EmptySchema Text) TxOutRef
+headUtxo pkh = MaybeT $ do
+    utxos <- Contract.utxosAt $ pubKeyHashAddress pkh Nothing
     case keys utxos of
       []       -> do
                   Contract.logError @String "no utxo found"
                   return Nothing
       oref : _ -> return (Just oref)
-
--- returns the first found utxo in the payment address
-headUtxo :: PaymentPubKeyHash -> MaybeT (Contract () EmptySchema Text) TxOutRef
-headUtxo pkh = MaybeT $ do
-    utxos <- Contract.utxosAt $ pubKeyHashAddress pkh Nothing
-    runMaybeT $ head' utxos
-
--- returns the first found utxo in a payment address matching the tokenname
-headUtxoForToken :: PaymentPubKeyHash -> TokenName -> Integer -> MaybeT (Contract () EmptySchema Text) TxOutRef
-headUtxoForToken pkh tn' amount = MaybeT $ do
-    let addr = pubKeyHashAddress pkh Nothing
-    utxos <- Contract.fundsAtAddressCondition (anyTokenAmount tn' amount) addr
-    runMaybeT $ head' utxos
 
 submitTxConstraintsWait :: ( PlutusTx.FromData (Scripts.DatumType a), PlutusTx.ToData (Scripts.RedeemerType a), PlutusTx.ToData (Scripts.DatumType a), AsContractError e ) => ScriptLookups a -> TxConstraints (Scripts.RedeemerType a) (Scripts.DatumType a) -> Contract w s e ()
 submitTxConstraintsWait l t = submitTxConstraintsWith l t >>= awaitTxConfirmed . getCardanoTxId
