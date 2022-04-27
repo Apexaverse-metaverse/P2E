@@ -5,6 +5,9 @@ skeyFile=$(realpath $3)
 ppFile="$SCRIPT_DIR/$NODE_DIR/protocol-parameters.json"
 policyFile="$SCRIPT_DIR/$NODE_DIR/policy.plutus"
 oref=$1
+orefEnt=(${oref//#/ })
+tId=$orefEnt[0]
+tIdx=$orefEnt[1]
 
 echo "address file: $addrFile"
 echo "signing key file: $skeyFile"
@@ -16,7 +19,7 @@ addr=$(cat $addrFile)
 cd $SCRIPT_DIR/..
 cabal repl -v0 <<EOF
     import Deploy (writePolicyFile)
-    writePolicyFile "$policyFile" "$addr" 
+    writePolicyFile "$policyFile" "$txId" $txIdx
 EOF
 echo "policy file: $policyFile"
 tnHex=$(

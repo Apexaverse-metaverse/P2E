@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE OverloadedStrings   #-}
 
 module Deploy 
     ( tryReadAddress
@@ -13,7 +14,6 @@ import qualified Data.ByteString.Short       as SBS
 import qualified Data.ByteString.Lazy        as LBS
 import qualified Data.Text                   as Text
 import           Data.Maybe                  (fromJust)          
-import qualified Ledger                      as Plutus
 import           Ledger.Typed.Scripts        as Plutus.Scripts
 import           Cardano.Api                 as API
 import           Cardano.Api.Shelley         (Address (..), PlutusScript (..))
@@ -53,12 +53,7 @@ unsafeTokenNameHex = let getByteString (BuiltinByteString bs) = bs in BS8.unpack
 writeMintingPolicy :: FilePath -> Plutus.Scripts.MintingPolicy -> IO (Either (FileError ()) ())
 writeMintingPolicy file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) file Nothing . PlutusScriptSerialised . SBS.toShort . LBS.toStrict . serialise . getMintingPolicy
 
-writePolicyFile :: [Char] -> [Char] -> IO ()
-writePolicyFile f s = case tryReadAddress s >>= Plutus.toPubKeyHash of
-    Nothing  -> throwIO $ userError "Could not compute hash of address"
-    Just pkh -> do
-        let pp      = mkPolicyParams $ Plutus.PaymentPubKeyHash pkh
-        e <- writeMintingPolicy f $ policy $ pp
-        case e of
-          Left err -> throwIO $ userError $ show err
-          Right () -> return ()
+writePolicyFile :: String -> String -> Integer -> IO ()
+writePolicyFile f tId tIdx = let oref = TxOutRef (Plutus.TxId $ toBuiltin $ BS8.pack tId) tIdx in
+                                 (writeMintingPolicy f $ policy $ mkPolicyParams oref)
+                             >>= either (throwIO . userError . show) pure
