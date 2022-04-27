@@ -16,3 +16,4 @@ fi
 
 export PATH=$PATH:$SCRIPT_DIR
 export CARDANO_NODE_SOCKET_PATH=$SCRIPT_DIR/$NODE_DIR/node.socket
+export CARDANO_ENV=$1

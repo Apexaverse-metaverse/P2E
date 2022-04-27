@@ -8,12 +8,14 @@ module Deploy
     , writePolicyFile 
     ) where
 
+import           Debug.Trace                 
 import           Control.Exception           (throwIO)
 import qualified Data.ByteString.Char8       as BS8
 import qualified Data.ByteString.Short       as SBS
 import qualified Data.ByteString.Lazy        as LBS
 import qualified Data.Text                   as Text
 import           Data.Maybe                  (fromJust)          
+import           Data.String                 (fromString)
 import           Ledger.Typed.Scripts        as Plutus.Scripts
 import           Cardano.Api                 as API
 import           Cardano.Api.Shelley         (Address (..), PlutusScript (..))
@@ -54,6 +56,8 @@ writeMintingPolicy :: FilePath -> Plutus.Scripts.MintingPolicy -> IO (Either (Fi
 writeMintingPolicy file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) file Nothing . PlutusScriptSerialised . SBS.toShort . LBS.toStrict . serialise . getMintingPolicy
 
 writePolicyFile :: String -> String -> Integer -> IO ()
-writePolicyFile f tId tIdx = let oref = TxOutRef (Plutus.TxId $ toBuiltin $ BS8.pack tId) tIdx in
-                                 (writeMintingPolicy f $ policy $ mkPolicyParams (txOutRefId oref, txOutRefIdx oref))
+writePolicyFile f tId tIdx =     ( writeMintingPolicy f
+                                 $ policy
+                                 $ Debug.Trace.traceShowId
+                                 $ mkPolicyParams (fromString $ tId, tIdx))
                              >>= either (throwIO . userError . show) pure
