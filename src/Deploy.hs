@@ -55,5 +55,5 @@ writeMintingPolicy file = writeFileTextEnvelope @(PlutusScript PlutusScriptV1) f
 
 writePolicyFile :: String -> String -> Integer -> IO ()
 writePolicyFile f tId tIdx = let oref = TxOutRef (Plutus.TxId $ toBuiltin $ BS8.pack tId) tIdx in
-                                 (writeMintingPolicy f $ policy $ mkPolicyParams oref)
+                                 (writeMintingPolicy f $ policy $ mkPolicyParams (txOutRefId oref, txOutRefIdx oref))
                              >>= either (throwIO . userError . show) pure

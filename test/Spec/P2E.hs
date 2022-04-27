@@ -20,6 +20,7 @@ import Plutus.Contract.Trace()
 import Plutus.Contract.Wallet (getUnspentOutput)
 import Ledger
     ( PaymentPubKeyHash
+    , TxOutRef(..)
     -- , Script
     , Value
     -- , scriptSize
@@ -59,8 +60,9 @@ mintInvalidPK givenPk = do
      oref           <- getUnspentOutput
      gutxos         <- utxosAt (pubKeyHashAddress givenPk Nothing)
      utxos          <- utxosAt (pubKeyHashAddress myPk Nothing)
-     let pp         =  mkPolicyParams oref
-         gpp        =  mkPolicyParams $ fst $ head $ toList gutxos
+     let pp         =  mkPolicyParams (txOutRefId oref, txOutRefIdx oref)
+         goref      =  fst $ head $ toList gutxos
+         gpp        =  mkPolicyParams (txOutRefId goref, txOutRefIdx goref)  
          val        =  singleton (curSymbol pp) tokenName tokenSupply
          -- we're trying to cheat the validator, so we'll force
          -- incorrect lookup + tx values
@@ -72,7 +74,7 @@ mintInvalidPK givenPk = do
 mintVal :: Integer -> Contract () EmptySchema Text ()
 mintVal v = do
     oref        <- getUnspentOutput 
-    let pp      =  mkPolicyParams oref
+    let pp      =  mkPolicyParams (txOutRefId oref, txOutRefIdx oref)
         val     =  singleton (curSymbol pp) tokenName v
         lookups =  Constraints.mintingPolicy $ policy pp         
         tx'     =  Constraints.mustMintValue val

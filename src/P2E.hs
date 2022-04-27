@@ -56,7 +56,7 @@ tokenSupply = 10_000_000_000_000_000
 data PolicyParams = PolicyParams
     { tn :: TokenName
     , ts :: TokenSupply
-    , tr :: TxOutRef
+    , tr :: (TxId, Integer)
     } deriving Show
 
 PlutusTx.makeLift ''PolicyParams
@@ -66,15 +66,17 @@ mkPolicy :: PolicyParams -> () -> ScriptContext -> Bool
 mkPolicy pp () ctx = traceIfFalse "Minting UTxO is not being consumed" spendsMintingUTxO &&
                      traceIfFalse "Minting an invalid AXV amount" mintsExpectedAmount where
                         info                = scriptContextTxInfo ctx
+                        refHash             = fst $ tr pp
+                        refIdx              = snd $ tr pp
                         -- because utxos refs are unique, when at least one output
                         -- matches one input we assume that the spent event is also unique
-                        spendsMintingUTxO   = any (\i -> txInInfoOutRef i == tr pp) $ txInfoInputs info
+                        spendsMintingUTxO   = spendsOutput info refHash refIdx
                         mintsExpectedAmount = case Value.flattenValue (txInfoMint info) of
                            [(_, tn', v)] | tn' == (tn pp) && v > 0 -> v == (ts pp) -- mint supply
                            _                                       -> False        -- other
 
-mkPolicyParams :: TxOutRef -> PolicyParams
-mkPolicyParams oref = PolicyParams { tn = tokenName, ts = tokenSupply, tr = oref }
+mkPolicyParams :: (TxId, Integer) -> PolicyParams
+mkPolicyParams t = PolicyParams { tn = tokenName, ts = tokenSupply, tr = t }
 
 policyCode :: PolicyParams -> PlutusTx.CompiledCode Scripts.WrappedMintingPolicyType
 policyCode pp = $$(PlutusTx.compile [|| Scripts.wrapMintingPolicy . mkPolicy ||])
@@ -106,7 +108,7 @@ mint = do
    pkh         <- Contract.ownPaymentPubKeyHash
    txOutRef    <- getUnspentOutput
    utxos       <- utxosAt (pubKeyHashAddress pkh Nothing)
-   let pp      = mkPolicyParams txOutRef
+   let pp      = mkPolicyParams (txOutRefId txOutRef, txOutRefIdx txOutRef)
        val     = Value.singleton (curSymbol pp) tokenName tokenSupply
        lookups = mintLookups (policy pp) utxos
        tx      = mintTx val txOutRef
