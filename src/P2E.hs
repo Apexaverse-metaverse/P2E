@@ -21,27 +21,27 @@ module P2E
     , simulate
     , tokenName
     , mkPolicyParams
-    , headUtxo
     , submitTxConstraintsWait 
+    , mintTx
+    , mintLookups
     ) where
 
 import           Control.Monad          hiding (fmap)
-import           Control.Monad.Trans.Class (lift)
-import           Control.Monad.Trans.Maybe (MaybeT(..))
 import           Data.Text              (Text)
 import           Data.Void              (Void)
-import           Data.Map               (keys)
+import           Data.Map               (Map)
 import           Plutus.Contract        as Contract
+import           Plutus.Contract.Wallet (getUnspentOutput)
 import           Plutus.Trace.Emulator  as Emulator
 import qualified PlutusTx
 import           PlutusTx.Prelude       hiding (Semigroup(..), unless)
-import           Ledger                 hiding (mint, singleton)
-import           Ledger.Constraints     (mintingPolicy, mustMintValue)
+import           Ledger                 hiding (mint, singleton, unspentOutputs)
+import           Ledger.Constraints     (mintingPolicy, mustMintValue, mustSpendPubKeyOutput, unspentOutputs)
 import           Ledger.Constraints.OffChain (ScriptLookups)
 import           Ledger.Constraints.TxConstraints (TxConstraints)
 import qualified Ledger.Typed.Scripts   as Scripts
 import qualified Ledger.Value           as Value
-import           Prelude                (IO, Show (..), String)
+import           Prelude                (IO, Show (..), String, (<>))
 import           Text.Printf            (printf)
 import           Wallet.Emulator.Wallet
 
@@ -92,33 +92,26 @@ anyTokenAmount name amount val = any testEntry $ Value.flattenValue val where
     testEntry (_, tName, tAmount) | tName == name = tAmount >= amount
     testEntry _                                   = False
 
--- returns the first found utxo in the payment address
-headUtxo :: PaymentPubKeyHash -> MaybeT (Contract () EmptySchema Text) TxOutRef
-headUtxo pkh = MaybeT $ do
-    utxos <- Contract.utxosAt $ pubKeyHashAddress pkh Nothing
-    case keys utxos of
-      []       -> do
-                  Contract.logError @String "no utxo found"
-                  return Nothing
-      oref : _ -> return (Just oref)
-
 submitTxConstraintsWait :: ( PlutusTx.FromData (Scripts.DatumType a), PlutusTx.ToData (Scripts.RedeemerType a), PlutusTx.ToData (Scripts.DatumType a), AsContractError e ) => ScriptLookups a -> TxConstraints (Scripts.RedeemerType a) (Scripts.DatumType a) -> Contract w s e ()
 submitTxConstraintsWait l t = submitTxConstraintsWith l t >>= awaitTxConfirmed . getCardanoTxId
 
+mintLookups :: Scripts.MintingPolicy -> Map TxOutRef ChainIndexTxOut -> ScriptLookups a
+mintLookups p u = mintingPolicy p <> unspentOutputs u
+
+mintTx :: Value -> TxOutRef -> TxConstraints i o
+mintTx v o = mustMintValue v <> mustSpendPubKeyOutput o
+
 mint :: Contract () EmptySchema Text ()
-mint = void $ runMaybeT $ do
-               -- MaybeT monad
-   pkh         <- lift $ Contract.ownPaymentPubKeyHash
-   lift $ Contract.logInfo @String (printf "looking tx for %s" $ show pkh)
-   oref        <- headUtxo pkh
-   lift $ Contract.logInfo @String (printf "found tx %s" $ show oref)
-   let pp      = mkPolicyParams oref
+mint = do
+   pkh         <- Contract.ownPaymentPubKeyHash
+   txOutRef    <- getUnspentOutput
+   utxos       <- utxosAt (pubKeyHashAddress pkh Nothing)
+   let pp      = mkPolicyParams txOutRef
        val     = Value.singleton (curSymbol pp) tokenName tokenSupply
-       lookups = mintingPolicy $ policy pp
-       tx      = mustMintValue val
-   lift $      -- Contract monad
-               submitTxConstraintsWait @Void lookups tx
-           >>  Contract.logInfo @String ( printf "forged %s" $ show val )
+       lookups = mintLookups (policy pp) utxos
+       tx      = mintTx val txOutRef
+   void $ submitTxConstraintsWait @Void lookups tx
+   Contract.logInfo @String ( printf "forged %s" $ show val )
 
 simulate :: IO ()
 simulate = runEmulatorTraceIO $ do

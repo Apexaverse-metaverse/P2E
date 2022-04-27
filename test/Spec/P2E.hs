@@ -9,16 +9,23 @@ module Spec.P2E ( tests )  where
 
 import Test.Tasty
 import Control.Monad (void)
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Maybe (MaybeT(..))
 import Data.Text (Text)
 import Data.Void (Void)
-import PlutusTx.Prelude hiding (trace)
+import Data.Map (toList)
+import PlutusTx.Prelude hiding (trace, toList)
 import qualified Plutus.Trace.Emulator as Trace
 import Plutus.Contract as Contract
 import Plutus.Contract.Test hiding (not)
 import Plutus.Contract.Trace()
-import Ledger (PaymentPubKeyHash, Script, Value, unMintingPolicyScript, scriptSize, TokenName)
+import Plutus.Contract.Wallet (getUnspentOutput)
+import Ledger
+    ( PaymentPubKeyHash
+    -- , Script
+    , Value
+    -- , scriptSize
+    , TokenName
+    , pubKeyHashAddress 
+    )
 import Ledger.Constraints as Constraints
 import Ledger.Value (singleton, flattenValue)
 import Wallet.Emulator.Wallet (mockWalletAddress)
@@ -29,14 +36,15 @@ import P2E
     , tokenSupply
     , tokenName
     , mkPolicyParams
-    , headUtxo
     , submitTxConstraintsWait 
+    , mintLookups
+    , mintTx
     )
 
-assertScriptSize :: Contract () EmptySchema Text () -> Trace.ContractInstanceTag -> Script -> TracePredicate
-assertScriptSize c t code = (assertDone c t assert msg) where
-    msg = "script too large"
-    assert = const (scriptSize code < 30000)
+-- assertScriptSize :: Contract () EmptySchema Text () -> Trace.ContractInstanceTag -> Script -> TracePredicate
+-- assertScriptSize c t code = (assertDone c t assert msg) where
+--     msg = "script too large"
+--     assert = const (scriptSize code < 30000)
 
 trace :: Contract () EmptySchema Text ()  -> Trace.EmulatorTrace ()
 trace c = void $ do
@@ -46,27 +54,29 @@ trace c = void $ do
 
 -- simulates a mint with a policy written for another addr
 mintInvalidPK :: PaymentPubKeyHash -> Contract () EmptySchema Text ()
-mintInvalidPK givenPk = void $ runMaybeT $ do
-     myPk        <- lift Contract.ownPaymentPubKeyHash
-     myOref      <- headUtxo myPk
-     givenOref   <- headUtxo givenPk
-     let pp      = mkPolicyParams myOref
-         gpp     = mkPolicyParams givenOref
-         val     = singleton (curSymbol pp) tokenName tokenSupply
-         lookups = Constraints.mintingPolicy $ policy gpp
-         tx'     = Constraints.mustMintValue val
-     lift $ submitTxConstraintsWait @Void lookups tx'
+mintInvalidPK givenPk = do
+     myPk           <- Contract.ownPaymentPubKeyHash
+     oref           <- getUnspentOutput
+     gutxos         <- utxosAt (pubKeyHashAddress givenPk Nothing)
+     utxos          <- utxosAt (pubKeyHashAddress myPk Nothing)
+     let pp         =  mkPolicyParams oref
+         gpp        =  mkPolicyParams $ fst $ head $ toList gutxos
+         val        =  singleton (curSymbol pp) tokenName tokenSupply
+         -- we're trying to cheat the validator, so we'll force
+         -- incorrect lookup + tx values
+         lookups    =  mintLookups (policy gpp) utxos
+         tx'        =  mintTx val oref
+     submitTxConstraintsWait @Void lookups tx'
 
 -- simulates a mint with a given amount of tokens
 mintVal :: Integer -> Contract () EmptySchema Text ()
-mintVal v = void $ runMaybeT $ do
-    pk          <- lift Contract.ownPaymentPubKeyHash
-    oref        <- headUtxo pk
-    let pp      = mkPolicyParams oref
-        val     = singleton (curSymbol pp) tokenName v
-        lookups = Constraints.mintingPolicy $ policy pp         
-        tx'     = Constraints.mustMintValue val
-    lift $ submitTxConstraintsWait @Void lookups tx'
+mintVal v = do
+    oref        <- getUnspentOutput 
+    let pp      =  mkPolicyParams oref
+        val     =  singleton (curSymbol pp) tokenName v
+        lookups =  Constraints.mintingPolicy $ policy pp         
+        tx'     =  Constraints.mustMintValue val
+    submitTxConstraintsWait @Void lookups tx'
 
 -- simulates minting twice using same wallet
 mintTwice :: Contract () EmptySchema Text ()
