@@ -48,6 +48,6 @@ Basic functions:
 Mint, Burn
 ```
 
-Testnet: [cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f](https://testnet.cardanoscan.io/tokenPolicy/cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f)
-Mainnet: [bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d](https://cardanoscan.io/tokenPolicy/bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d)
-Mainnet (registry): `scripts/mainnet/bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d415856.json`
+- Testnet: [cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f](https://testnet.cardanoscan.io/tokenPolicy/cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f)
+- Mainnet: [bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d](https://cardanoscan.io/tokenPolicy/bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d)
+- Mainnet (registry): `scripts/mainnet/bfe8c533adabcb6fbc75da0c9fd9777c81f4706b02af69ce6aea880d415856.json`
