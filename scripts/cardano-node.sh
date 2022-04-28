@@ -1,6 +1,8 @@
 #!/bin/bash
 if [[ $1 == "--rts" ]]; then
 	RTS="-N -I0.1 -Iw7200 -A128m -n4m -F0.7 -H3500M -O4500M -T -S"
+elif [[ $1 == "--rts2" ]]; then
+	RTS="-N --nonmoving-gc" 
 fi
 cardano-node run \
 	 +RTS $RTS -RTS \
