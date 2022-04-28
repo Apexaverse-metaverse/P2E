@@ -1,22 +1,27 @@
 #!/bin/bash
 set -e
-addrFile=$(realpath $2)
-skeyFile=$(realpath $3)
+addrFile=$(realpath "${WALLET}/wallet.addr")
+skeyFile=$(realpath "${WALLET}/wallet.skey")
 ppFile="$SCRIPT_DIR/$NODE_DIR/protocol-parameters.json"
 policyFile="$SCRIPT_DIR/$NODE_DIR/policy.plutus"
 oref=$1
+orefEnt=(${oref//#/ })
+tId="${orefEnt[0]}"
+tIdx="${orefEnt[1]}"
+#tIdx="8ea4c7e3139e46b6aa69620808f9c705eec45497ce3b339c482033d89004a969"
 
 echo "address file: $addrFile"
 echo "signing key file: $skeyFile"
+echo "TxHash: $tId"
+echo "TxIdx: $tIdx"
 
 cardano-cli query protocol-parameters $MAGIC --out-file $ppFile
 
 addr=$(cat $addrFile)
 
-cd $SCRIPT_DIR/..
 cabal repl -v0 <<EOF
     import Deploy (writePolicyFile)
-    writePolicyFile "$policyFile" "$addr" 
+    writePolicyFile "$policyFile" "$tId" $tIdx
 EOF
 echo "policy file: $policyFile"
 tnHex=$(
@@ -26,13 +31,12 @@ cabal repl -v0 <<EOF
 EOF
 )
 tnHex=$(echo $tnHex | xargs echo)
-cd $SCRIPT_DIR
 
 unsignedFile="$SCRIPT_DIR/$NODE_DIR/tx.unsigned"
 signedFile="$SCRIPT_DIR/$NODE_DIR/tx.signed"
 unitFile="$SCRIPT_DIR/$NODE_DIR/unit.json"
 pid=$(cardano-cli transaction policyid --script-file $policyFile)
-v="10000000000 $pid.$tnHex"
+v="10000000000000000 $pid.$tnHex"
 
 echo "currency symbol: $pid"
 echo "token name (hex): $tnHex"
@@ -44,13 +48,12 @@ cardano-cli transaction build \
     --tx-in $oref \
     --tx-in-collateral $oref \
     --tx-out "$addr + 1500000 lovelace + $v" \
-    --required-signer $skeyFile \
     --mint "$v" \
     --mint-script-file $policyFile \
     --mint-redeemer-file $unitFile \
     --change-address $addr \
     --protocol-params-file $ppFile \
-    --out-file $unsignedFile \
+    --out-file $unsignedFile
 
 cardano-cli transaction sign \
     --tx-body-file $unsignedFile \
