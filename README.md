@@ -47,3 +47,5 @@ Total Supply and Max Supply: 10,000,000,000.000000
 Basic functions:
 Mint, Burn
 ```
+
+Testnet: [cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f](https://testnet.cardanoscan.io/tokenPolicy/cb1229abf5925361df967077c6e51901061b17d9581ce25fd66f213f)
